@@ -1,103 +1,169 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  description: string;
+}
+
+interface CartItem extends Product {
+  quantity: number;
+}
+
+const products: Product[] = [
+  {
+    id: 1,
+    name: 'Cloudflare T-Shirt',
+    price: 29.99,
+    image: '/products/tshirt.jpg',
+    description: 'Comfortable cotton t-shirt with Cloudflare logo'
+  },
+  {
+    id: 2,
+    name: 'Cloudflare Hoodie',
+    price: 59.99,
+    image: '/products/hoodie.jpg',
+    description: 'Warm and cozy hoodie perfect for any weather'
+  },
+  {
+    id: 3,
+    name: 'Cloudflare Cap',
+    price: 19.99,
+    image: '/products/cap.jpg',
+    description: 'Stylish cap with embroidered Cloudflare logo'
+  }
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [cart, setCart] = useState<CartItem[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+  const addToCart = (product: Product) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
+  };
+
+  const removeFromCart = (productId: number) => {
+    setCart(prevCart => prevCart.filter(item => item.id !== productId));
+  };
+
+  const updateQuantity = (productId: number, quantity: number) => {
+    if (quantity < 1) return;
+    setCart(prevCart =>
+      prevCart.map(item =>
+        item.id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  return (
+    <main className="min-h-screen bg-navy text-text-primary">
+      <div className="bg-brand-blue p-8">
+        <div className="flex justify-center mb-8">
+          <div className="relative w-48 h-16">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+              src="/simsy-logo.png"
+              alt="SIMSY Logo"
+              fill
+              className="object-contain"
+              priority
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
+        {/* Products Section */}
+        <div>
+          <h2 className="text-2xl font-semibold mb-4 text-text-primary">Products</h2>
+          <div className="grid grid-cols-1 gap-4">
+            {products.map(product => (
+              <div key={product.id} className="border border-brand-blue p-4 rounded-lg bg-black/50">
+                <div className="aspect-w-16 aspect-h-9 mb-4 bg-black rounded">
+                  <div className="w-full h-48 bg-black rounded flex items-center justify-center">
+                    <span className="text-text-secondary">Product Image</span>
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-text-primary">{product.name}</h3>
+                <p className="text-text-secondary mb-2">{product.description}</p>
+                <p className="text-lg font-bold mb-2 text-brand-blue">${product.price.toFixed(2)}</p>
+                <button
+                  onClick={() => addToCart(product)}
+                  className="bg-brand-blue text-text-primary px-4 py-2 rounded hover:bg-brand-blue-dark transition-colors"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Cart Section */}
+        <div>
+          <h2 className="text-2xl font-semibold mb-4 text-text-primary">Shopping Cart</h2>
+          {cart.length === 0 ? (
+            <p className="text-text-secondary">Your cart is empty</p>
+          ) : (
+            <div className="space-y-4">
+              {cart.map(item => (
+                <div key={item.id} className="border border-brand-blue p-4 rounded-lg bg-black/50">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-text-primary">{item.name}</h3>
+                      <p className="text-text-secondary">${item.price.toFixed(2)}</p>
+                    </div>
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <div className="flex items-center mt-2">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="px-2 py-1 border border-brand-blue rounded text-text-primary hover:bg-brand-blue-dark"
+                    >
+                      -
+                    </button>
+                    <span className="mx-2 text-text-primary">{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="px-2 py-1 border border-brand-blue rounded text-text-primary hover:bg-brand-blue-dark"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <div className="border-t border-brand-blue pt-4 mt-4">
+                <div className="flex justify-between text-xl font-bold text-text-primary">
+                  <span>Total:</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+                <button className="w-full mt-4 bg-brand-purple text-text-primary px-4 py-2 rounded hover:bg-opacity-90 transition-colors">
+                  Checkout
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </main>
   );
 }
