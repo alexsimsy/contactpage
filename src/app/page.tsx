@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 export default function Home() {
   const [hasClientId, setHasClientId] = useState<boolean | null>(null);
+  const [isStripeLoaded, setIsStripeLoaded] = useState(false);
 
   useEffect(() => {
     const queryString = window.location.search;
@@ -74,13 +75,15 @@ export default function Home() {
       </div>
 
       <div className="container mx-auto px-4 py-8 flex-grow">
-        <stripe-pricing-table 
-          id="spt" 
-          pricing-table-id="prctbl_1Qwg1HP2tDGLRpd65lHQatAQ"
-          publishable-key="pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP"
-          client-reference-id="fromuri"
-          customer-email="fromuri">
-        </stripe-pricing-table>
+        {isStripeLoaded && (
+          <stripe-pricing-table 
+            id="spt" 
+            pricing-table-id="prctbl_1Qwg1HP2tDGLRpd65lHQatAQ"
+            publishable-key="pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP"
+            client-reference-id="fromuri"
+            customer-email="fromuri">
+          </stripe-pricing-table>
+        )}
       </div>
 
       <footer className="bg-brand-blue p-8 text-center">
@@ -95,20 +98,21 @@ export default function Home() {
         </div>
       </footer>
 
-      <Script id="stripe-pricing-table-script" strategy="afterInteractive">
-        {`
+      <Script 
+        src="https://js.stripe.com/v3/pricing-table.js" 
+        strategy="afterInteractive"
+        onLoad={() => {
+          setIsStripeLoaded(true);
           const queryString = window.location.search;
           const urlParams = new URLSearchParams(queryString);
           const CLIENT = urlParams.get('client_reference_id');
           const EMAIL = urlParams.get('prefilled_email');
-          spt = document.getElementById("spt");
-          spt.setAttribute('client-reference-id',CLIENT);
-          spt.setAttribute('customer-email',EMAIL);
-        `}
-      </Script>
-      <Script 
-        src="https://js.stripe.com/v3/pricing-table.js" 
-        strategy="afterInteractive"
+          const spt = document.getElementById("spt");
+          if (spt) {
+            spt.setAttribute('client-reference-id', CLIENT || '');
+            spt.setAttribute('customer-email', EMAIL || '');
+          }
+        }}
       />
     </main>
   );
