@@ -7,10 +7,13 @@ bucket = ".next"
 [build.environment]
 NODE_VERSION = "20.11.1"
 
+# Pages specific configuration
+pages_build_output_dir = ".next"
+compatibility_date = "2024-01-01"
+
 [env.production]
 name = "simsy-ecommerce"
 workers_dev = true
 
 # Specify the entry point for the Worker
-main = ".next/server/middleware.js"
-compatibility_date = "2024-01-01" 
+main = ".next/server/middleware.js" 
