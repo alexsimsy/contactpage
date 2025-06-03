@@ -81,7 +81,7 @@ export default function Home() {
             data-pricing-table-id="prctbl_1Qwg1HP2tDGLRpd65lHQatAQ"
             data-publishable-key="pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP"
             data-client-reference-id=""
-            data-customer-email=""
+            data-customer-email="dave@test.com"
             ref={(el) => {
               if (el) {
                 el.innerHTML = '';
