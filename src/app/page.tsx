@@ -7,12 +7,16 @@ import { useEffect, useState } from 'react';
 export default function Home() {
   const [hasClientId, setHasClientId] = useState<boolean | null>(null);
   const [isStripeLoaded, setIsStripeLoaded] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState<string>('');
+  const [clientReferenceId, setClientReferenceId] = useState<string>('');
 
   useEffect(() => {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const CLIENT = urlParams.get('client_reference_id');
+    const EMAIL = urlParams.get('prefilled_email');
     setHasClientId(!!CLIENT);
+    setCustomerEmail(EMAIL || '');
   }, []);
 
   if (hasClientId === null) {
@@ -80,14 +84,16 @@ export default function Home() {
             id="spt"
             data-pricing-table-id="prctbl_1Qwg1HP2tDGLRpd65lHQatAQ"
             data-publishable-key="pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP"
-            data-client-reference-id=""
-            data-customer-email="dave@test.com"
+            data-client-reference-id={clientReferenceId}  
+            data-customer-email={customerEmail}
             ref={(el) => {
               if (el) {
                 el.innerHTML = '';
                 const table = document.createElement('stripe-pricing-table');
                 table.setAttribute('pricing-table-id', 'prctbl_1Qwg1HP2tDGLRpd65lHQatAQ');
                 table.setAttribute('publishable-key', 'pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP');
+                table.setAttribute('customer-email', customerEmail);
+                table.setAttribute('client-reference-id', clientReferenceId);
                 el.appendChild(table);
               }
             }}
