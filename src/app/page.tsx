@@ -17,6 +17,7 @@ export default function Home() {
     const EMAIL = urlParams.get('prefilled_email');
     setHasClientId(!!CLIENT);
     setCustomerEmail(EMAIL || '');
+    setClientReferenceId(CLIENT || '');
   }, []);
 
   if (hasClientId === null) {
