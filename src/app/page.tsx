@@ -76,13 +76,22 @@ export default function Home() {
 
       <div className="container mx-auto px-4 py-8 flex-grow">
         {isStripeLoaded && (
-          <stripe-pricing-table 
-            id="spt" 
-            pricing-table-id="prctbl_1Qwg1HP2tDGLRpd65lHQatAQ"
-            publishable-key="pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP"
-            client-reference-id="fromuri"
-            customer-email="fromuri">
-          </stripe-pricing-table>
+          <div
+            id="spt"
+            data-pricing-table-id="prctbl_1Qwg1HP2tDGLRpd65lHQatAQ"
+            data-publishable-key="pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP"
+            data-client-reference-id=""
+            data-customer-email=""
+            ref={(el) => {
+              if (el) {
+                el.innerHTML = '';
+                const table = document.createElement('stripe-pricing-table');
+                table.setAttribute('pricing-table-id', 'prctbl_1Qwg1HP2tDGLRpd65lHQatAQ');
+                table.setAttribute('publishable-key', 'pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP');
+                el.appendChild(table);
+              }
+            }}
+          />
         )}
       </div>
 
@@ -109,8 +118,11 @@ export default function Home() {
           const EMAIL = urlParams.get('prefilled_email');
           const spt = document.getElementById("spt");
           if (spt) {
-            spt.setAttribute('client-reference-id', CLIENT || '');
-            spt.setAttribute('customer-email', EMAIL || '');
+            const table = spt.querySelector('stripe-pricing-table');
+            if (table) {
+              table.setAttribute('client-reference-id', CLIENT || '');
+              table.setAttribute('customer-email', EMAIL || '');
+            }
           }
         }}
       />

@@ -1,14 +1,13 @@
 declare namespace JSX {
-  interface IntrinsicElements {
-    'stripe-pricing-table': React.DetailedHTMLProps<
-      React.HTMLAttributes<HTMLElement> & {
-        id?: string;
-        'pricing-table-id'?: string;
-        'publishable-key'?: string;
-        'client-reference-id'?: string;
-        'customer-email'?: string;
-      },
-      HTMLElement
-    >;
+  interface Element {
+    'stripe-pricing-table': any;
   }
-} 
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'stripe-pricing-table': HTMLElement;
+  }
+}
+
+export {}; 
