@@ -9,15 +9,18 @@ export default function Home() {
   const [isStripeLoaded, setIsStripeLoaded] = useState(false);
   const [customerEmail, setCustomerEmail] = useState<string>('');
   const [clientReferenceId, setClientReferenceId] = useState<string>('');
+  const [pricingTableId, setPricingTableId] = useState<string>('');
 
   useEffect(() => {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const CLIENT = urlParams.get('client_reference_id');
     const EMAIL = urlParams.get('prefilled_email');
+    const PRICING_TABLE_ID = process.env.NEXT_PUBLIC_STRIPE_PRICING_TABLE_ID;
     setHasClientId(!!CLIENT);
     setCustomerEmail(EMAIL || '');
     setClientReferenceId(CLIENT || '');
+    setPricingTableId(PRICING_TABLE_ID || '');
   }, []);
 
   if (hasClientId === null) {
@@ -80,18 +83,18 @@ export default function Home() {
       </div>
 
       <div className="container mx-auto px-4 py-8 flex-grow">
-        {isStripeLoaded && (
+        {isStripeLoaded && pricingTableId && (
           <div
             id="spt"
-            data-pricing-table-id="prctbl_1Qwg1HP2tDGLRpd65lHQatAQ"
+            data-pricing-table-id={pricingTableId}
             data-publishable-key="pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP"
-            data-client-reference-id={clientReferenceId}  
+            data-client-reference-id={clientReferenceId}
             data-customer-email={customerEmail}
             ref={(el) => {
               if (el) {
                 el.innerHTML = '';
                 const table = document.createElement('stripe-pricing-table');
-                table.setAttribute('pricing-table-id', 'prctbl_1Qwg1HP2tDGLRpd65lHQatAQ');
+                table.setAttribute('pricing-table-id', pricingTableId);
                 table.setAttribute('publishable-key', 'pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP');
                 table.setAttribute('customer-email', customerEmail);
                 table.setAttribute('client-reference-id', clientReferenceId);
