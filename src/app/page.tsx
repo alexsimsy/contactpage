@@ -10,6 +10,7 @@ export default function Home() {
   const [customerEmail, setCustomerEmail] = useState<string>('');
   const [clientReferenceId, setClientReferenceId] = useState<string>('');
   const [pricingTableId, setPricingTableId] = useState<string>('');
+  const [publishableKey, setPublishableKey] = useState<string>('');
 
   useEffect(() => {
     const queryString = window.location.search;
@@ -17,10 +18,12 @@ export default function Home() {
     const CLIENT = urlParams.get('client_reference_id');
     const EMAIL = urlParams.get('prefilled_email');
     const PRICING_TABLE_ID = process.env.NEXT_PUBLIC_STRIPE_PRICING_TABLE_ID;
+    const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
     setHasClientId(!!CLIENT);
     setCustomerEmail(EMAIL || '');
     setClientReferenceId(CLIENT || '');
     setPricingTableId(PRICING_TABLE_ID || '');
+    setPublishableKey(PUBLISHABLE_KEY || '');
   }, []);
 
   if (hasClientId === null) {
@@ -83,11 +86,11 @@ export default function Home() {
       </div>
 
       <div className="container mx-auto px-4 py-8 flex-grow">
-        {isStripeLoaded && pricingTableId && (
+        {isStripeLoaded && pricingTableId && publishableKey && (
           <div
             id="spt"
             data-pricing-table-id={pricingTableId}
-            data-publishable-key="pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP"
+            data-publishable-key={publishableKey}
             data-client-reference-id={clientReferenceId}
             data-customer-email={customerEmail}
             ref={(el) => {
@@ -95,7 +98,7 @@ export default function Home() {
                 el.innerHTML = '';
                 const table = document.createElement('stripe-pricing-table');
                 table.setAttribute('pricing-table-id', pricingTableId);
-                table.setAttribute('publishable-key', 'pk_live_51P11JmP2tDGLRpd6EpUNPSd0XxxGistCYxhBa2YMBbkeJWnd5iwpOoqcv1OsZhXNsqJiYMU8LVMY3srtHb87Y1Uz00NMGCFNnP');
+                table.setAttribute('publishable-key', publishableKey);
                 table.setAttribute('customer-email', customerEmail);
                 table.setAttribute('client-reference-id', clientReferenceId);
                 el.appendChild(table);
