@@ -1,0 +1,11 @@
+name = "simsy-contactpage"
+compatibility_date = "2024-01-01"
+
+[env.production]
+name = "simsy-contactpage"
+
+[env.production.vars]
+NODE_ENV = "production"
+
+# Add your SendGrid API key as a secret in Cloudflare dashboard
+# or use: wrangler secret put SENDGRID_API_KEY 
