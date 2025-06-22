@@ -61,7 +61,7 @@ export default function Home() {
           message: errorData.error || 'Something went wrong. Please try again.'
         });
       }
-    } catch (error) {
+    } catch {
       setSubmitStatus({
         type: 'error',
         message: 'Network error. Please check your connection and try again.'
@@ -73,26 +73,29 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-navy text-text-primary flex flex-col">
-      <div className="bg-brand-blue p-8">
+      <header className="bg-brand-blue p-8">
         <div className="flex justify-center">
           <a href="https://s-imsy.com" target="_blank" rel="noopener noreferrer">
             <Image
               alt="Simsy logo"
-              className="mb-4"
-              height="40"
+              height="64"
               src="/simsy-logo.png"
-              width="40"
+              width="192"
+              className="object-contain"
+              priority
             />
           </a>
         </div>
-        <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">Contact Us</h1>
-        <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed dark:text-gray-400">
-          Get in touch with our support team. We&apos;re here to help!
-        </p>
-      </div>
+      </header>
 
       <div className="container mx-auto px-4 py-8 flex-grow">
         <div className="max-w-2xl mx-auto">
+           <div className="text-center mb-8">
+             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">Contact Us</h1>
+             <p className="max-w-[600px] mx-auto text-gray-500 md:text-xl/relaxed dark:text-gray-400">
+               Get in touch with our support team. We're here to help!
+             </p>
+           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
