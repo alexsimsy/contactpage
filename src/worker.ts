@@ -34,7 +34,7 @@ const worker = {
 
 async function serveStaticAsset(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
-  let path = url.pathname;
+  const path = url.pathname;
   const kvNamespace = env.__STATIC_CONTENT as KVNamespace;
 
   // Serve index.html for the root path
