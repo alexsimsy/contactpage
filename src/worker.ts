@@ -1,3 +1,6 @@
+/// <reference types="@cloudflare/workers-types" />
+import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
+
 interface ContactFormData {
   name: string;
   email: string;
@@ -5,9 +8,58 @@ interface ContactFormData {
   message: string;
 }
 
-export async function onRequestPost(context: any) {
+interface Env {
+  SENDGRID_API_KEY: string;
+  __STATIC_CONTENT: unknown;
+  __STATIC_CONTENT_MANIFEST: unknown;
+}
+
+const worker = {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const url = new URL(request.url);
+    
+    // Handle API routes
+    if (url.pathname === '/api/contact' && request.method === 'POST') {
+      return handleContactForm(request, env);
+    }
+    
+    // Serve static files
+    try {
+      return await getAssetFromKV(
+        {
+          request,
+          waitUntil: ctx.waitUntil.bind(ctx),
+        },
+        {
+          ASSET_NAMESPACE: env.__STATIC_CONTENT as KVNamespace,
+          ASSET_MANIFEST: env.__STATIC_CONTENT_MANIFEST as string,
+        }
+      );
+    } catch (e) {
+      // If the asset is not found, serve index.html for SPA routing
+      if (e instanceof Error && e.message.includes('not found')) {
+        try {
+          return await getAssetFromKV(
+            {
+              request: new Request(new URL('/index.html', request.url)),
+              waitUntil: ctx.waitUntil.bind(ctx),
+            },
+            {
+              ASSET_NAMESPACE: env.__STATIC_CONTENT as KVNamespace,
+              ASSET_MANIFEST: env.__STATIC_CONTENT_MANIFEST as string,
+            }
+          );
+        } catch {
+          return new Response('Not Found', { status: 404 });
+        }
+      }
+      return new Response('Internal Server Error', { status: 500 });
+    }
+  },
+};
+
+async function handleContactForm(request: Request, env: Env): Promise<Response> {
   try {
-    const { request } = context;
     const body: ContactFormData = await request.json();
     const { name, email, subject, message } = body;
 
@@ -34,11 +86,11 @@ export async function onRequestPost(context: any) {
       );
     }
 
-    // Send email using SendGrid (you'll need to set up the API key in Cloudflare)
+    // Send email using SendGrid
     const sendGridResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${context.env.SENDGRID_API_KEY}`,
+        'Authorization': `Bearer ${env.SENDGRID_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -97,4 +149,6 @@ ${message}
       }
     );
   }
-} 
+}
+
+export default worker; 

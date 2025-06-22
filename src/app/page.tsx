@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
+type ContactApiResponse = { message: string } | { error: string };
+
 export default function Home() {
   const [formData, setFormData] = useState({
     name: '',
@@ -38,18 +40,33 @@ export default function Home() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const data: unknown = await response.json();
+      function isContactApiResponse(obj: unknown): obj is ContactApiResponse {
+        if (typeof obj !== 'object' || obj === null) return false;
+        const o = obj as Record<string, unknown>;
+        return (
+          (typeof o.message === 'string') ||
+          (typeof o.error === 'string')
+        );
+      }
 
-      if (response.ok) {
-        setSubmitStatus({
-          type: 'success',
-          message: 'Thank you for your message! We will get back to you soon.'
-        });
-        setFormData({ name: '', email: '', subject: '', message: '' });
+      if (isContactApiResponse(data)) {
+        if (response.ok && 'message' in data) {
+          setSubmitStatus({
+            type: 'success',
+            message: 'Thank you for your message! We will get back to you soon.'
+          });
+          setFormData({ name: '', email: '', subject: '', message: '' });
+        } else if ('error' in data) {
+          setSubmitStatus({
+            type: 'error',
+            message: data.error || 'Something went wrong. Please try again.'
+          });
+        }
       } else {
         setSubmitStatus({
           type: 'error',
-          message: data.error || 'Something went wrong. Please try again.'
+          message: 'Something went wrong. Please try again.'
         });
       }
     } catch {
