@@ -1,16 +1,8 @@
 /// <reference types="@cloudflare/workers-types" />
 
-interface ContactFormData {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
-
 interface Env {
+  __STATIC_CONTENT: KVNamespace;
   SENDGRID_API_KEY: string;
-  __STATIC_CONTENT: unknown;
-  __STATIC_CONTENT_MANIFEST: unknown;
 }
 
 const worker = {

@@ -82,28 +82,25 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-navy text-text-primary flex flex-col">
       <div className="bg-brand-blue p-8">
-        <div className="flex justify-center mb-8">
-          <div className="relative w-48 h-16">
+        <div className="flex justify-center">
+          <a href="https://s-imsy.com" target="_blank" rel="noopener noreferrer">
             <Image
+              alt="Simsy logo"
+              className="mb-4"
+              height="40"
               src="/simsy-logo.png"
-              alt="SIMSY Logo"
-              fill
-              className="object-contain"
-              priority
+              width="40"
             />
-          </div>
+          </a>
         </div>
+        <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">Contact Us</h1>
+        <p className="max-w-[600px] text-gray-500 md:text-xl/relaxed dark:text-gray-400">
+          Get in touch with our support team. We&apos;re here to help!
+        </p>
       </div>
 
       <div className="container mx-auto px-4 py-8 flex-grow">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-4">Contact Us</h1>
-            <p className="text-lg text-gray-300">
-              Get in touch with our support team. We&apos;re here to help!
-            </p>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
