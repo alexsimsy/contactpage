@@ -25,6 +25,11 @@ const worker = {
     
     // Serve static files
     try {
+      // Check if static content is available
+      if (!env.__STATIC_CONTENT || !env.__STATIC_CONTENT_MANIFEST) {
+        return new Response('Static content not available', { status: 500 });
+      }
+
       return await getAssetFromKV(
         {
           request,
@@ -36,6 +41,8 @@ const worker = {
         }
       );
     } catch (e) {
+      console.error('Error serving static content:', e);
+      
       // If the asset is not found, serve index.html for SPA routing
       if (e instanceof Error && e.message.includes('not found')) {
         try {
@@ -49,11 +56,16 @@ const worker = {
               ASSET_MANIFEST: env.__STATIC_CONTENT_MANIFEST as string,
             }
           );
-        } catch {
+        } catch (e2) {
+          console.error('Error serving index.html:', e2);
           return new Response('Not Found', { status: 404 });
         }
       }
-      return new Response('Internal Server Error', { status: 500 });
+      
+      return new Response('Internal Server Error', { 
+        status: 500,
+        headers: { 'Content-Type': 'text/plain' }
+      });
     }
   },
 };

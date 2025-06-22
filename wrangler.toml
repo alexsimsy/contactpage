@@ -5,11 +5,5 @@ main = "src/worker.ts"
 [site]
 bucket = "out"
 
-[env.production]
-name = "simsy-contactpage"
-
-[env.production.vars]
-NODE_ENV = "production"
-
 # Add your SendGrid API key as a secret in Cloudflare dashboard
 # or use: wrangler secret put SENDGRID_API_KEY 
