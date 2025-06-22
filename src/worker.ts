@@ -59,7 +59,7 @@ async function serveStaticAsset(request: Request, env: Env): Promise<Response> {
   // This will match requests for /_next/static/..., /simsy-logo.png, etc.
   // if their keys match the path exactly.
   const key = path.slice(1); // remove leading slash
-  let asset = await kvNamespace.get(key, { type: 'arrayBuffer' });
+  const asset = await kvNamespace.get(key, { type: 'arrayBuffer' });
 
   if (asset) {
     return new Response(asset, { headers: { 'Content-Type': getContentType(path) } });
