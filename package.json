@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@cloudflare/kv-asset-handler": "^0.4.0",
     "@sendgrid/mail": "^8.1.5",
     "autoprefixer": "^10.4.21",
     "next": "15.3.2",

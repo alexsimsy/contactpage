@@ -1,5 +1,4 @@
 /// <reference types="@cloudflare/workers-types" />
-import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
 interface ContactFormData {
   name: string;
@@ -42,44 +41,11 @@ const worker = {
         });
       }
 
-      // If manifest is not available, try to serve files directly from KV
-      if (!env.__STATIC_CONTENT_MANIFEST) {
-        console.log('Manifest not available, trying direct KV access');
-        return await serveStaticDirectly(request, env);
-      }
-
-      return await getAssetFromKV(
-        {
-          request,
-          waitUntil: ctx.waitUntil.bind(ctx),
-        },
-        {
-          ASSET_NAMESPACE: env.__STATIC_CONTENT as KVNamespace,
-          ASSET_MANIFEST: env.__STATIC_CONTENT_MANIFEST as string,
-        }
-      );
+      console.log('Manifest not available, using direct KV access');
+      return await serveStaticDirectly(request, env);
+      
     } catch (e) {
       console.error('Error serving static content:', e);
-      
-      // If the asset is not found, serve index.html for SPA routing
-      if (e instanceof Error && e.message.includes('not found')) {
-        try {
-          return await getAssetFromKV(
-            {
-              request: new Request(new URL('/index.html', request.url)),
-              waitUntil: ctx.waitUntil.bind(ctx),
-            },
-            {
-              ASSET_NAMESPACE: env.__STATIC_CONTENT as KVNamespace,
-              ASSET_MANIFEST: env.__STATIC_CONTENT_MANIFEST as string,
-            }
-          );
-        } catch (e2) {
-          console.error('Error serving index.html:', e2);
-          return new Response('Not Found', { status: 404 });
-        }
-      }
-      
       return new Response('Internal Server Error', { 
         status: 500,
         headers: { 'Content-Type': 'text/plain' }
