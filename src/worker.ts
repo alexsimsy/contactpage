@@ -22,95 +22,54 @@ const worker = {
       return handleContactForm(request, env);
     }
     
-    // Serve static files
     try {
-      // Debug: Log what environment variables are available
-      console.log('Environment variables:', {
-        hasStaticContent: !!env.__STATIC_CONTENT,
-        hasStaticManifest: !!env.__STATIC_CONTENT_MANIFEST,
-        staticContentType: typeof env.__STATIC_CONTENT,
-        staticManifestType: typeof env.__STATIC_CONTENT_MANIFEST
-      });
-
-      // Check if static content is available
-      if (!env.__STATIC_CONTENT) {
-        console.log('No static content available');
-        return new Response('Static content not available', { 
-          status: 500,
-          headers: { 'Content-Type': 'text/plain' }
-        });
-      }
-
-      console.log('Manifest not available, using direct KV access');
-      return await serveStaticDirectly(request, env);
-      
+      return await serveStaticAsset(request, env);
     } catch (e) {
-      console.error('Error serving static content:', e);
-      return new Response('Internal Server Error', { 
-        status: 500,
-        headers: { 'Content-Type': 'text/plain' }
-      });
+      console.error('Error serving static asset:', e);
+      // Don't expose internal errors to the user
+      return new Response('An unexpected error occurred', { status: 500 });
     }
   },
 };
 
-async function serveStaticDirectly(request: Request, env: Env): Promise<Response> {
+async function serveStaticAsset(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
-  const path = url.pathname;
+  let path = url.pathname;
   const kvNamespace = env.__STATIC_CONTENT as KVNamespace;
 
-  // Handle root path separately
+  // Serve index.html for the root path
   if (path === '/') {
-    console.log('Request for root, serving index.html');
-    return findAndServeHashedAsset(kvNamespace, 'index', 'html');
-  }
-
-  // Try to find the asset by its path (e.g., for /_next/static/...)
-  const key = path.slice(1); // remove leading slash
-  console.log('Looking for asset key:', key);
-  const asset = await kvNamespace.get(key, { type: 'arrayBuffer' });
-
-  if (asset) {
-    console.log('Found asset for key:', key);
-    return new Response(asset, {
-      headers: { 'Content-Type': getContentType(path) },
-    });
-  }
-
-  // If the asset is not found, it might be a client-side route for the SPA.
-  // A common heuristic is to check if the path has a file extension.
-  // Next.js routes like /about do not have extensions.
-  const hasFileExtension = path.split('/').pop()?.includes('.') ?? false;
-
-  if (!hasFileExtension) {
-    console.log('Path has no extension, assuming SPA route. Serving index.html.');
-    return findAndServeHashedAsset(kvNamespace, 'index', 'html');
-  }
-
-  // The request was for a specific asset with an extension, but we couldn't find it.
-  console.log('Asset not found for key:', key);
-  return new Response(`Asset not found: ${key}`, { status: 404 });
-}
-
-async function findAndServeHashedAsset(kv: KVNamespace, baseName: string, extension: string): Promise<Response> {
-  const prefix = `${baseName}.`;
-  console.log(`Searching for asset with prefix: ${prefix}`);
-
-  const list = await kv.list({ prefix });
-  const key = list.keys.find(k => k.name.endsWith(`.${extension}`));
-
-  if (key) {
-    console.log(`Found hashed asset: ${key.name}`);
-    const asset = await kv.get(key.name, { type: 'arrayBuffer' });
-    if (asset) {
-      return new Response(asset, {
-        headers: { 'Content-Type': getContentType(key.name) },
-      });
+    const list = await kvNamespace.list({ prefix: 'index.' });
+    const indexKey = list.keys.find(k => k.name.endsWith('.html'));
+    if (indexKey) {
+        const asset = await kvNamespace.get(indexKey.name, { type: 'arrayBuffer' });
+        if (asset) {
+            return new Response(asset, { headers: { 'Content-Type': 'text/html' } });
+        }
     }
+    return new Response('Index page not found', { status: 404 });
   }
 
-  console.log(`Could not find hashed asset for base: ${baseName}`);
-  return new Response('Not Found', { status: 404 });
+  // For all other assets, look up the exact path.
+  const key = path.slice(1); // remove leading slash
+  const asset = await kvNamespace.get(key, { type: 'arrayBuffer' });
+  
+  if (asset) {
+    return new Response(asset, { headers: { 'Content-Type': getContentType(path) } });
+  }
+
+  // If a specific asset is not found, it might be a client-side route.
+  // Serve index.html as a fallback for SPA navigation.
+  const list = await kvNamespace.list({ prefix: 'index.' });
+  const indexKey = list.keys.find(k => k.name.endsWith('.html'));
+  if (indexKey) {
+      const asset = await kvNamespace.get(indexKey.name, { type: 'arrayBuffer' });
+      if (asset) {
+          return new Response(asset, { headers: { 'Content-Type': 'text/html' } });
+      }
+  }
+
+  return new Response(`Asset not found: ${path}`, { status: 404 });
 }
 
 function getContentType(path: string): string {
