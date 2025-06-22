@@ -19,7 +19,7 @@ const worker = {
     
     // Handle API routes
     if (url.pathname === '/api/contact' && request.method === 'POST') {
-      return handleContactForm(request, env);
+      return handleApiRequest(request, env);
     }
     
     try {
@@ -110,96 +110,51 @@ function getContentType(path: string): string {
   }
 }
 
-async function handleContactForm(request: Request, env: Env): Promise<Response> {
+async function handleApiRequest(request: Request, env: Env): Promise<Response> {
+  if (new URL(request.url).pathname !== '/api/contact' || request.method !== 'POST') {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  if (!env.SENDGRID_API_KEY) {
+    const errorMessage = 'SENDGRID_API_KEY secret not set in Cloudflare worker.';
+    console.error(errorMessage);
+    return new Response(errorMessage, { status: 500 });
+  }
+
   try {
-    const body: ContactFormData = await request.json();
-    const { name, email, subject, message } = body;
+    const { name, email, message } = await request.json<{ name: string; email: string; message: string; }>();
 
-    // Validate required fields
-    if (!name || !email || !subject || !message) {
-      return new Response(
-        JSON.stringify({ error: 'All fields are required' }),
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: 'Please enter a valid email address' }),
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Send email using SendGrid
-    const sendGridResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    const send_request = new Request('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${env.SENDGRID_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        personalizations: [
-          {
-            to: [{ email: 'support@s-imsy.com' }],
-            subject: `Contact Form: ${subject}`,
-          },
-        ],
-        from: { email: 'noreply@s-imsy.com' },
-        content: [
-          {
-            type: 'text/plain',
-            value: `
-Name: ${name}
-Email: ${email}
-Subject: ${subject}
-
-Message:
-${message}
-            `,
-          },
-          {
-            type: 'text/html',
-            value: `
-<h2>New Contact Form Submission</h2>
-<p><strong>Name:</strong> ${name}</p>
-<p><strong>Email:</strong> ${email}</p>
-<p><strong>Subject:</strong> ${subject}</p>
-<p><strong>Message:</strong></p>
-<p>${message.replace(/\n/g, '<br>')}</p>
-            `,
-          },
-        ],
+        personalizations: [{ to: [{ email: 'hello@simsy.io' }] }],
+        from: { email: 'hello@simsy.io', name: 'Simsy Contact Form' },
+        reply_to: { email: email, name: name },
+        subject: `New contact from ${name}`,
+        content: [{ type: 'text/plain', value: `Name: ${name}\nEmail: ${email}\nMessage: ${message}` }],
       }),
     });
 
-    if (!sendGridResponse.ok) {
-      throw new Error('Failed to send email');
-    }
+    const resp = await fetch(send_request);
 
-    return new Response(
-      JSON.stringify({ message: 'Email sent successfully' }),
-      { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    if (resp.ok) {
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } else {
+      const errorText = await resp.text();
+      const errorMessage = `Failed to send email. SendGrid responded with ${resp.status} ${resp.statusText}: ${errorText}`;
+      console.error(errorMessage);
+      throw new Error(errorMessage);
+    }
   } catch (error) {
-    console.error('Error sending email:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to send email' }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
+    const errorDetails = error instanceof Error ? error.message : String(error);
+    console.error('Error during email sending process:', errorDetails);
+    return new Response(`Failed to send email: ${errorDetails}`, { status: 500 });
   }
 }
 
