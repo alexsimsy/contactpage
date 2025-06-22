@@ -40,36 +40,28 @@ export default function Home() {
         body: JSON.stringify(formData),
       });
 
-      const data: unknown = await response.json();
-      function isContactApiResponse(obj: unknown): obj is ContactApiResponse {
-        if (typeof obj !== 'object' || obj === null) return false;
-        const o = obj as Record<string, unknown>;
-        return (
-          (typeof o.message === 'string') ||
-          (typeof o.error === 'string')
-        );
-      }
-
-      if (isContactApiResponse(data)) {
-        if (response.ok && 'message' in data) {
+      if (response.ok) {
+        const data = await response.json() as { success: boolean };
+        if (data.success) {
           setSubmitStatus({
             type: 'success',
             message: 'Thank you for your message! We will get back to you soon.'
           });
           setFormData({ name: '', email: '', subject: '', message: '' });
-        } else if ('error' in data) {
+        } else {
           setSubmitStatus({
             type: 'error',
-            message: data.error || 'Something went wrong. Please try again.'
+            message: 'An unexpected error occurred. Please try again.'
           });
         }
       } else {
+        const errorData = await response.json() as { error?: string };
         setSubmitStatus({
           type: 'error',
-          message: 'Something went wrong. Please try again.'
+          message: errorData.error || 'Something went wrong. Please try again.'
         });
       }
-    } catch {
+    } catch (error) {
       setSubmitStatus({
         type: 'error',
         message: 'Network error. Please check your connection and try again.'
