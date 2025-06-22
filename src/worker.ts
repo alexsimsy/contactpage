@@ -123,8 +123,8 @@ async function handleApiRequest(request: Request, env: Env): Promise<Response> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        personalizations: [{ to: [{ email: 'hello@simsy.io' }] }],
-        from: { email: 'hello@simsy.io', name: 'Simsy Contact Form' },
+        personalizations: [{ to: [{ email: 'support@s-imsy.com' }] }],
+        from: { email: 'support@s-imsy.com', name: 'Simsy Contact Form' },
         reply_to: { email: email, name: name },
         subject: `New contact from ${name}`,
         content: [{ type: 'text/plain', value: `Name: ${name}\nEmail: ${email}\nMessage: ${message}` }],
