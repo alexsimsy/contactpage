@@ -3,8 +3,6 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
-type ContactApiResponse = { message: string } | { error: string };
-
 export default function Home() {
   const [formData, setFormData] = useState({
     name: '',
@@ -93,7 +91,7 @@ export default function Home() {
            <div className="text-center mb-8">
              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">Contact Us</h1>
              <p className="max-w-[600px] mx-auto text-gray-500 md:text-xl/relaxed dark:text-gray-400">
-               Get in touch with our support team. We're here to help!
+               Get in touch with our support team. We&apos;re here to help!
              </p>
            </div>
           <form onSubmit={handleSubmit} className="space-y-6">
