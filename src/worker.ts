@@ -25,9 +25,20 @@ const worker = {
     
     // Serve static files
     try {
+      // Debug: Log what environment variables are available
+      console.log('Environment variables:', {
+        hasStaticContent: !!env.__STATIC_CONTENT,
+        hasStaticManifest: !!env.__STATIC_CONTENT_MANIFEST,
+        staticContentType: typeof env.__STATIC_CONTENT,
+        staticManifestType: typeof env.__STATIC_CONTENT_MANIFEST
+      });
+
       // Check if static content is available
       if (!env.__STATIC_CONTENT || !env.__STATIC_CONTENT_MANIFEST) {
-        return new Response('Static content not available', { status: 500 });
+        return new Response('Static content not available', { 
+          status: 500,
+          headers: { 'Content-Type': 'text/plain' }
+        });
       }
 
       return await getAssetFromKV(
