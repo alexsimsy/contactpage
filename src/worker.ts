@@ -35,6 +35,7 @@ const worker = {
 
       // Check if static content is available
       if (!env.__STATIC_CONTENT) {
+        console.log('No static content available');
         return new Response('Static content not available', { 
           status: 500,
           headers: { 'Content-Type': 'text/plain' }
@@ -91,6 +92,8 @@ async function serveStaticDirectly(request: Request, env: Env): Promise<Response
   const url = new URL(request.url);
   let path = url.pathname;
   
+  console.log('serveStaticDirectly called with path:', path);
+  
   // Default to index.html for root path
   if (path === '/') {
     path = '/index.html';
@@ -99,22 +102,39 @@ async function serveStaticDirectly(request: Request, env: Env): Promise<Response
   // Remove leading slash for KV key
   const key = path.startsWith('/') ? path.slice(1) : path;
   
+  console.log('Looking for KV key:', key);
+  
   try {
     const kvNamespace = env.__STATIC_CONTENT as KVNamespace;
+    
+    // Try to list keys to see what's available
+    try {
+      const keys = await kvNamespace.list();
+      console.log('Available KV keys (first 10):', keys.keys.slice(0, 10).map(k => k.name));
+    } catch (listError) {
+      console.log('Could not list KV keys:', listError);
+    }
+    
     const asset = await kvNamespace.get(key, { type: 'arrayBuffer' });
     
     if (!asset) {
+      console.log('Asset not found for key:', key);
       // Try index.html for SPA routing
       if (path !== '/index.html') {
+        console.log('Trying index.html as fallback');
         const indexAsset = await kvNamespace.get('index.html', { type: 'arrayBuffer' });
         if (indexAsset) {
+          console.log('Found index.html, serving it');
           return new Response(indexAsset, {
             headers: { 'Content-Type': 'text/html' }
           });
         }
       }
+      console.log('No index.html found either');
       return new Response('Not Found', { status: 404 });
     }
+    
+    console.log('Found asset for key:', key, 'size:', asset.byteLength);
     
     // Determine content type based on file extension
     const contentType = getContentType(path);
