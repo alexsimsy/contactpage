@@ -59,14 +59,15 @@ async function serveStaticDirectly(request: Request, env: Env): Promise<Response
   const path = url.pathname;
   const kvNamespace = env.__STATIC_CONTENT as KVNamespace;
 
-  // Handle root path by searching for the hashed index.html
+  // Handle root path separately
   if (path === '/') {
+    console.log('Request for root, serving index.html');
     return findAndServeHashedAsset(kvNamespace, 'index', 'html');
   }
 
-  // Handle other paths directly
-  const key = path.startsWith('/') ? path.slice(1) : path;
-  console.log('Looking for KV key:', key);
+  // Try to find the asset by its path (e.g., for /_next/static/...)
+  const key = path.slice(1); // remove leading slash
+  console.log('Looking for asset key:', key);
   const asset = await kvNamespace.get(key, { type: 'arrayBuffer' });
 
   if (asset) {
@@ -76,9 +77,19 @@ async function serveStaticDirectly(request: Request, env: Env): Promise<Response
     });
   }
 
-  console.log('Asset not found for key:', key, '- falling back to SPA index.');
-  // Fallback to serving the main index file for SPA routing
-  return findAndServeHashedAsset(kvNamespace, 'index', 'html');
+  // If the asset is not found, it might be a client-side route for the SPA.
+  // A common heuristic is to check if the path has a file extension.
+  // Next.js routes like /about do not have extensions.
+  const hasFileExtension = path.split('/').pop()?.includes('.') ?? false;
+
+  if (!hasFileExtension) {
+    console.log('Path has no extension, assuming SPA route. Serving index.html.');
+    return findAndServeHashedAsset(kvNamespace, 'index', 'html');
+  }
+
+  // The request was for a specific asset with an extension, but we couldn't find it.
+  console.log('Asset not found for key:', key);
+  return new Response(`Asset not found: ${key}`, { status: 404 });
 }
 
 async function findAndServeHashedAsset(kv: KVNamespace, baseName: string, extension: string): Promise<Response> {
