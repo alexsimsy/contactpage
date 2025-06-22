@@ -76,7 +76,7 @@ async function serveStaticDirectly(request: Request, env: Env): Promise<Response
     // Try to list keys to see what's available
     try {
       const keys = await kvNamespace.list();
-      console.log('Available KV keys (first 10):', keys.keys.slice(0, 10).map(k => k.name));
+      console.log('Available KV keys (raw):', JSON.stringify(keys));
     } catch (listError) {
       console.log('Could not list KV keys:', listError);
     }
