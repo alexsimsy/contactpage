@@ -37,38 +37,43 @@ async function serveStaticAsset(request: Request, env: Env): Promise<Response> {
   const path = url.pathname;
   const kvNamespace = env.__STATIC_CONTENT as KVNamespace;
 
-  // Serve index.html for the root path
-  if (path === '/') {
+  // Find the hashed index.html for the root path or SPA navigation
+  const serveIndex = async () => {
     const list = await kvNamespace.list({ prefix: 'index.' });
     const indexKey = list.keys.find(k => k.name.endsWith('.html'));
     if (indexKey) {
-        const asset = await kvNamespace.get(indexKey.name, { type: 'arrayBuffer' });
-        if (asset) {
-            return new Response(asset, { headers: { 'Content-Type': 'text/html' } });
-        }
+      const asset = await kvNamespace.get(indexKey.name, { type: 'arrayBuffer' });
+      if (asset) {
+        return new Response(asset, { headers: { 'Content-Type': 'text/html' } });
+      }
     }
-    return new Response('Index page not found', { status: 404 });
+    return new Response('Not Found', { status: 404 });
+  };
+
+  // Root path should always serve index.html
+  if (path === '/') {
+    return serveIndex();
   }
 
-  // For all other assets, look up the exact path.
+  // For any other path, first try a direct lookup.
+  // This will match requests for /_next/static/..., /simsy-logo.png, etc.
+  // if their keys match the path exactly.
   const key = path.slice(1); // remove leading slash
-  const asset = await kvNamespace.get(key, { type: 'arrayBuffer' });
-  
+  let asset = await kvNamespace.get(key, { type: 'arrayBuffer' });
+
   if (asset) {
     return new Response(asset, { headers: { 'Content-Type': getContentType(path) } });
   }
 
-  // If a specific asset is not found, it might be a client-side route.
-  // Serve index.html as a fallback for SPA navigation.
-  const list = await kvNamespace.list({ prefix: 'index.' });
-  const indexKey = list.keys.find(k => k.name.endsWith('.html'));
-  if (indexKey) {
-      const asset = await kvNamespace.get(indexKey.name, { type: 'arrayBuffer' });
-      if (asset) {
-          return new Response(asset, { headers: { 'Content-Type': 'text/html' } });
-      }
+  // If the direct lookup fails, it's NOT an asset. It's an SPA navigation.
+  // A request for a page like /about won't have a matching key.
+  // In that case, we serve index.html and let the client-side router handle it.
+  const hasExtension = path.split('/').pop()?.includes('.') ?? false;
+  if (!hasExtension) {
+    return serveIndex();
   }
 
+  // If it has an extension but wasn't found, it's a real 404 for an asset.
   return new Response(`Asset not found: ${path}`, { status: 404 });
 }
 
